@@ -1,9 +1,9 @@
-=== BtW Importer ===
+=== BtW Importer - Blogger to WordPress Importer ===
 Contributors: silversh  
 Tags: blogger, blogspot, blogger importer, blogspot importer, import blogspot  
-Requires at least: 6.8.1  
+Requires at least: 6.8.0  
 Tested up to: 6.8  
-Stable tag: 2.0.0  
+Stable tag: 2.1.0  
 Requires PHP: 7.4  
 License: MIT  
 License URI: https://github.com/mnasikin/btw-importer/blob/main/LICENSE  
@@ -50,6 +50,7 @@ Make sure to check your content after you import contents. Also, this plugin doe
 == Requirements ==
 * PHP 7.4 or later  
 * cURL PHP Extension  
+* `SimpleXML` PHP Extension
 * `allow_url_fopen` enabled  
 * Writable `wp-content/uploads` folder (default setting already meets this)
 
@@ -59,9 +60,16 @@ Make sure to check your content after you import contents. Also, this plugin doe
 3. Open the **BtW Importer** menu from your dashboard.
 
 == Screenshots ==
-1. Preview of the import process interface
+1. Importer Page
+2. Import Process
+3. Done Importing
+4. Redirect Log
 
 == Changelog ==
+= 2.1.0 =
+* Draft, Published, Trash Post in Blogspot now keep as Draft, Published, Trash in WordPress 
+
+
 = 2.0.0 =
 🔥 Major Update 🔥 
 
@@ -76,4 +84,4 @@ Make sure to check your content after you import contents. Also, this plugin doe
 
 == Upgrade Notice ==
 = 2.0.0 =
- Major Update! Please check the Changelog for more information
+ Please check the changelog tab to check what's new.

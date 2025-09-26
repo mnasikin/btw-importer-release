@@ -1,24 +1,24 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-class Btw_Importer_Redirect_Log {
+class btw_importer_Redirect_Log {
     public function __construct() {
-        add_action('admin_menu', [$this, 'add_redirect_log_menu']);
-        add_action('admin_init', [$this, 'handle_clear_log']);
+        add_action('admin_menu', [$this, 'btw_importer_add_redirect_log_menu']);
+        add_action('admin_init', [$this, 'btw_importer_handle_clear_log']);
     }
 
-    public function add_redirect_log_menu() {
+    public function btw_importer_add_redirect_log_menu() {
         add_submenu_page(
             'btw-importer',
             'Redirect Log',
             'Redirect Log',
             'manage_options',
             'btw-redirect-log',
-            [$this, 'render_redirect_log_page']
+            [$this, 'btw_importer_render_redirect_log_page']
         );
     }
 
-    public function handle_clear_log() {
+    public function btw_importer_handle_clear_log() {
         if (!current_user_can('manage_options')) return;
 
         if (isset($_POST['btw_importer_clear_log_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['btw_importer_clear_log_nonce'])), 'btw_importer_clear_log')) {
@@ -34,7 +34,7 @@ class Btw_Importer_Redirect_Log {
         }
     }
 
-    public function render_redirect_log_page() {
+    public function btw_importer_render_redirect_log_page() {
     global $wpdb;
 
     // Get and sanitize inputs
@@ -42,16 +42,18 @@ class Btw_Importer_Redirect_Log {
     $paged   = max(1, (int) filter_input(INPUT_GET, 'paged', FILTER_SANITIZE_NUMBER_INT));
     $orderby = sanitize_sql_orderby((string) filter_input(INPUT_GET, 'orderby'));
     $order   = (strtoupper((string) filter_input(INPUT_GET, 'order')) === 'ASC') ? 'ASC' : 'DESC';
-    // Cache removed to fix SQL preparation error
+    $post_type_filter = sanitize_text_field((string) filter_input(INPUT_GET, 'post_type', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
 
-
-    $allowed_orderby = ['p.post_date', 'p.post_type'];
+    $allowed_orderby = ['post_date', 'post_type'];
     if (!in_array($orderby, $allowed_orderby, true)) {
-        $orderby = 'p.post_date';
+        $orderby = 'post_date';
     }
 
     $per_page = 25;
     $offset   = ($paged - 1) * $per_page;
+
+    // Get distinct post types for filter dropdown
+    $post_types = $wpdb->get_col( $wpdb->prepare("SELECT DISTINCT p.post_type FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s ORDER BY p.post_type", '_btw_importer_old_permalink') );
 
     echo '<div class="wrap">';
     echo '<h1>Redirect Log</h1>';
@@ -59,11 +61,17 @@ class Btw_Importer_Redirect_Log {
 
     $clear_nonce = wp_create_nonce('btw_importer_clear_log');
 
-    // Search + clear form
+    // Search + filter form
     echo '<form method="get" style="margin-bottom:10px; display:inline-block; margin-right:10px;">
             <input type="hidden" name="page" value="btw-redirect-log" />
             <input type="search" name="s" placeholder="Search slug..." value="' . esc_attr($search) . '" />
-            <input type="submit" class="button" value="Search" />
+            <select name="post_type">
+                <option value="">All Post Types</option>';
+    foreach ($post_types as $type) {
+        echo '<option value="' . esc_attr($type) . '" ' . selected($post_type_filter, $type, false) . '>' . esc_html($type) . '</option>';
+    }
+    echo '</select>
+            <input type="submit" class="button" value="Filter" />
           </form>';
 
     echo '<form method="post" style="display:inline-block;" onsubmit="return confirm(\'Are you sure you want to clear the entire redirect log?\');">
@@ -71,37 +79,28 @@ class Btw_Importer_Redirect_Log {
             <input type="submit" class="button button-danger" value="Clear Log" />
           </form>';
 
-    // Build query safely
-    $params   = ['_btw_importer_old_permalink'];
-    if ($search) {
-        if ($orderby === 'p.post_date' && $order === 'ASC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value LIKE %s ORDER BY p.post_date ASC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', '%' . $wpdb->esc_like($search) . '%', $per_page, $offset]) );
-        } elseif ($orderby === 'p.post_date' && $order === 'DESC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value LIKE %s ORDER BY p.post_date DESC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', '%' . $wpdb->esc_like($search) . '%', $per_page, $offset]) );
-        } elseif ($orderby === 'p.post_type' && $order === 'ASC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value LIKE %s ORDER BY p.post_type ASC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', '%' . $wpdb->esc_like($search) . '%', $per_page, $offset]) );
-        } elseif ($orderby === 'p.post_type' && $order === 'DESC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value LIKE %s ORDER BY p.post_type DESC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', '%' . $wpdb->esc_like($search) . '%', $per_page, $offset]) );
-        } else {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s AND pm.meta_value LIKE %s ORDER BY p.post_date DESC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', '%' . $wpdb->esc_like($search) . '%', $per_page, $offset]) );
-        }
-    } else {
-        if ($orderby === 'p.post_date' && $order === 'ASC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s ORDER BY p.post_date ASC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', $per_page, $offset]) );
-        } elseif ($orderby === 'p.post_date' && $order === 'DESC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s ORDER BY p.post_date DESC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', $per_page, $offset]) );
-        } elseif ($orderby === 'p.post_type' && $order === 'ASC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s ORDER BY p.post_type ASC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', $per_page, $offset]) );
-        } elseif ($orderby === 'p.post_type' && $order === 'DESC') {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s ORDER BY p.post_type DESC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', $per_page, $offset]) );
-        } else {
-            $results = $wpdb->get_results( $wpdb->prepare("SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = %s ORDER BY p.post_date DESC LIMIT %d OFFSET %d", ['_btw_importer_old_permalink', $per_page, $offset]) );
-        }
+    // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $orderby and $order are whitelisted (ASC/DESC, allowed columns only)
+    $allowed_orderby = ['post_date', 'post_type'];
+    if ( ! in_array( $orderby, $allowed_orderby, true ) ) {
+        $orderby = 'post_date';
     }
 
-    $total_items = (int) $wpdb->get_var( "SELECT FOUND_ROWS()" );
-
-
+    $order = ( 'ASC' === strtoupper( $order ) ) ? 'ASC' : 'DESC';
+    $results = $wpdb->get_results(
+        $wpdb->prepare( 
+            "
+            SELECT SQL_CALC_FOUND_ROWS p.ID, p.post_type, p.post_date, pm.meta_value as old_slug
+            FROM {$wpdb->postmeta} pm
+            JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+            WHERE pm.meta_key = %s
+            ORDER BY p.{$orderby} {$order} 
+            LIMIT %d OFFSET %d
+            ",
+            '_btw_importer_old_permalink',
+            $per_page,
+            $offset 
+        )
+    );
 
     if (!$results) {
         echo '<p>No redirects found.</p>';
@@ -111,10 +110,13 @@ class Btw_Importer_Redirect_Log {
         if ($search) {
             $base_url = add_query_arg('s', urlencode($search), $base_url);
         }
+        if ($post_type_filter) {
+            $base_url = add_query_arg('post_type', urlencode($post_type_filter), $base_url);
+        }
 
         $columns = [
-            'p.post_date' => 'Date',
-            'p.post_type' => 'Post Type',
+            'post_date' => 'Date',
+            'post_type' => 'Post Type',
         ];
 
         echo '<table class="widefat striped">';
@@ -159,6 +161,7 @@ class Btw_Importer_Redirect_Log {
                     's'       => $search,
                     'orderby' => $orderby,
                     'order'   => $order,
+                    'post_type' => $post_type_filter,
                 ],
                 'prev_text' => esc_html__('« Prev', 'btw-importer'),
                 'next_text' => esc_html__('Next »', 'btw-importer'),

@@ -1,4 +1,4 @@
-[![Download Plugin](https://img.shields.io/badge/download_plugin-000?style=for-the-badge&logo=download&logoColor=white)](https://github.com/mnasikin/btw-importer/releases/tag/v2.0.0)
+[![Download Plugin](https://img.shields.io/badge/download_plugin-000?style=for-the-badge&logo=download&logoColor=white)](https://wordpress.org/plugins/btw-importer)
 
 # BtW Importer
 
@@ -62,6 +62,9 @@ Make sure to check your content after you import contents. Also, this plugin doe
 
 ## 🧾 Changelog
 
+### 2.1.0
+- Draft, Published, Trash Post in Blogspot now keep as Draft, Published, Trash in WordPress
+
 ### 2.0.0
 🔥 Major Update 🔥
 - Add notice before you start importing (required)
@@ -84,5 +87,4 @@ Make sure to check your content after you import contents. Also, this plugin doe
 ## 📢 Upgrade Notice
 
 ### 2.0.0
-
-Major Update! This release adds many features for your import process including add notice before import, add warning on leaving page while import in process, add redirect 301 from old blogspot permalink, add redirect log and clear redirect log, sync post and page published date, add or use category based on .atom file, only download image hosted on blogspot/google, only download original image to avoid duplicated image, security update, and some UI change.
+ Please check the changelog tab to check what's new.
