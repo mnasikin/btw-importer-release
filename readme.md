@@ -61,6 +61,9 @@ Make sure to check your content after you import contents. Also, this plugin doe
 6. Done! Your Blogger content is now in WordPress
 
 ## 🧾 Changelog
+### 2.2.0 
+- Remove comments from imported content. Previously, comments imported as posts 
+
 
 ### 2.1.0
 - Draft, Published, Trash Post in Blogspot now keep as Draft, Published, Trash in WordPress

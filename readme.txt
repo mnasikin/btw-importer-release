@@ -1,14 +1,14 @@
-=== BtW Importer - Blogger to WordPress Importer ===
+=== BtW Importer - Free Blogger/Blogspot Migration ===
 Contributors: silversh  
 Tags: blogger, blogspot, blogger importer, blogspot importer, import blogspot  
 Requires at least: 6.8.0  
 Tested up to: 6.8  
-Stable tag: 2.1.0  
+Stable tag: 2.2.0  
 Requires PHP: 7.4  
 License: MIT  
 License URI: https://github.com/mnasikin/btw-importer/blob/main/LICENSE  
 
-BtW Importer migrates your Blogger/Blogspot content to WordPress with a single click using your .atom file.
+Import your Blogger .atom file from Google Takeout and migrate to WordPress, free and automatic.
 
 == Description ==
 BtW Importer is a powerful yet simple migration tool that helps you seamlessly transfer your content from Blogger (Blogspot) to WordPress with minimal effort. Whether you're a casual blogger or managing a large archive, this plugin handles the complex parts so you don’t have to.
@@ -66,6 +66,9 @@ Make sure to check your content after you import contents. Also, this plugin doe
 4. Redirect Log
 
 == Changelog ==
+= 2.2.0 =
+* Remove comments from imported content. Previously, comments imported as posts 
+
 = 2.1.0 =
 * Draft, Published, Trash Post in Blogspot now keep as Draft, Published, Trash in WordPress 
 
@@ -83,5 +86,5 @@ Make sure to check your content after you import contents. Also, this plugin doe
 * Only download original size images (avoid duplicated)
 
 == Upgrade Notice ==
-= 2.0.0 =
+= 2.2.0 =
  Please check the changelog tab to check what's new.

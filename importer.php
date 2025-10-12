@@ -20,8 +20,8 @@ class btw_importer_Importer {
 
     public function btw_importer_enqueue_scripts($hook) {
         if ($hook !== 'toplevel_page_btw-importer') return;
-        wp_enqueue_script('btw-importer', plugin_dir_url(__FILE__).'btw-importer.js', ['jquery'], '1.2.2', true);
-        wp_localize_script('btw-importer', 'btwImporter', [
+        wp_enqueue_script('btw_importer_script', plugin_dir_url(__FILE__).'btw-importer.js', ['jquery'], '1.2.2', true);
+        wp_localize_script('btw_importer_script', 'btwImporter', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce'   => wp_create_nonce('btw_importer_importer_nonce')
         ]);
@@ -68,9 +68,10 @@ class btw_importer_Importer {
 
         $posts = [];
         foreach ($xml->entry as $entry) {
-            $bloggerType = strtolower((string)$entry->children('blogger', true)->type);
-            $post_type = ($bloggerType === 'page') ? 'page' : 'post';
+        $bloggerType = strtolower((string)$entry->children('blogger', true)->type);
+        $post_type = $bloggerType;
 
+        if ($post_type == 'page' || $post_type == 'post') {
             $title = sanitize_text_field((string)$entry->title);
             $content = (string)$entry->content;
             $author = isset($entry->author->name) ? sanitize_text_field((string)$entry->author->name) : '';
@@ -86,15 +87,15 @@ class btw_importer_Importer {
                 if ($term && strpos($term, '#') !== 0) {
                     $categories[] = sanitize_text_field($term);
                 }
-            }
+            } // ✅ kategori ditutup di sini
 
-            // get old permalink from <blogger:filename>
+            // get old permalink
             $filename = (string)$entry->children('blogger', true)->filename;
             $filename = trim($filename);
 
-            // get blogger post status from <blogger:status>
+            // get blogger post status
             $status_raw = strtolower((string)$entry->children('blogger', true)->status);
-            $status = 'publish'; // default
+            $status = 'publish';
             if ($status_raw === 'draft') $status = 'draft';
             elseif ($status_raw === 'deleted') $status = 'trash';
 
@@ -109,7 +110,12 @@ class btw_importer_Importer {
                 'filename'   => $filename,
                 'status'     => $status
             ];
+        } else {
+            // presumably a comment. Skip importing
         }
+    }
+
+        
 
         wp_send_json_success(['posts' => $posts]);
     }
