@@ -102,6 +102,8 @@ class btw_importer_Redirect_Log {
         )
     );
 
+    $total_items = (int) $wpdb->get_var("SELECT FOUND_ROWS()");
+
     if (!$results) {
         echo '<p>No redirects found.</p>';
     } else {

@@ -7,6 +7,11 @@ A powerful yet simple migration tool, BtW Importer helps you seamlessly transfer
 
 ## 🧾 Changelog
 
+### 2.3.0
+- Fix post type: `page` redirect not working properly
+- Auto hide overlay on fail, error, or stopped import
+- Fix Undefined variable $total_items  on `Redirect Log` page
+
 ### 2.2.0 
 - Remove comments from imported content. Previously, comments imported as posts 
 
