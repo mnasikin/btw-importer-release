@@ -41,13 +41,13 @@ Make sure to check your content after you import contents. Also, this plugin doe
 
 ## 📷 Screenshots
 1. Importer Page
-![Importer Page](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v2.0.0/screenshot-1.png)
+![Importer Page](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v3.0.0/screenshot-1.png)
 2. Import Process
-![Import Process](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v2.0.0/screenshot-2.png)
+![Import Process](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v3.0.0/screenshot-2.png)
 3. Done Importing
-![Done Importing](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v2.0.0/screenshot-3.png)
+![Done Importing](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v3.0.0/screenshot-3.png)
 4. Redirect Log
-![Redirect Log](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v2.0.0/screenshot-4.png)
+![Redirect Log](https://ik.imagekit.io/vbsmdqxuemd/btw-importer/v3.0.0/screenshot-4.png)
 
 
 ## 🚀 Usage
@@ -61,6 +61,13 @@ Make sure to check your content after you import contents. Also, this plugin doe
 6. Done! Your Blogger content is now in WordPress
 
 ## 🧾 Changelog
+## 3.0.0 
+- Fix HTML content on `pages` not imported
+- Add styling on Importer and Redirect Log page
+- Add legacy image URL (now support more image format and URL type)
+- Add `wp_safe_redirect` in redirect for better security
+- Security update based on WordPress 6.9 and PCP 1.7.0
+
 ### 2.2.0 
 - Remove comments from imported content. Previously, comments imported as posts 
 
@@ -89,5 +96,5 @@ Make sure to check your content after you import contents. Also, this plugin doe
 
 ## 📢 Upgrade Notice
 
-### 2.0.0
+### 3.0.0
  Please check the changelog tab to check what's new.

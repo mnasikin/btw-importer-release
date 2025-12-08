@@ -2,9 +2,9 @@
 Contributors: silversh  
 Tags: blogger, blogspot, blogger importer, blogspot importer, import blogspot  
 Requires at least: 6.8.0  
-Tested up to: 6.8  
-Stable tag: 2.3.0  
-Requires PHP: 7.4  
+Tested up to: 6.9  
+Stable tag: 3.0.0  
+Requires PHP: 8.1  
 License: MIT  
 License URI: https://github.com/mnasikin/btw-importer/blob/main/LICENSE  
 
@@ -66,6 +66,13 @@ Make sure to check your content after you import contents. Also, this plugin doe
 4. Redirect Log
 
 == Changelog ==
+= 3.0.0 =
+* Fix HTML content on `pages` not imported
+* Add styling on Importer and Redirect Log page
+* Add legacy image URL (now support more image format and URL type)
+* Add `wp_safe_redirect` in redirect for better security
+* Security update based on WordPress 6.9 and PCP 1.7.0
+
 = 2.3.0 =
 * Fix post type: `page` redirect not working properly
 * Auto hide overlay on fail, error, or stopped import
@@ -91,5 +98,5 @@ Make sure to check your content after you import contents. Also, this plugin doe
 * Only download original size images (avoid duplicated)
 
 == Upgrade Notice ==
-= 2.3.0 =
+= 3.0.0 =
  Please check the changelog tab to check what's new on this version.

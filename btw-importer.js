@@ -5,10 +5,10 @@ jQuery(document).ready(function($) {
     $('#agreeNotice').on('change', function() {
         if ($(this).is(':checked')) {
             $('#startImport').prop('disabled', false);
-            $('#importNotice').slideUp(); // collapse nicely
+            $('#importNotice').slideUp();
         } else {
             $('#startImport').prop('disabled', true);
-            $('#importNotice').slideDown(); // show again if unchecked
+            $('#importNotice').slideDown();
         }
     });
 
@@ -26,15 +26,15 @@ jQuery(document).ready(function($) {
 
             isImporting = true; // start importing
             $('#importOverlay').show();
-            $.post(btwImporter.ajaxUrl, {
-                action: 'btw_importer_prepare_import',
-                nonce: btwImporter.nonce,
-                atom_content: atomContent
-            }, function(response) {
+        $.post(btw_importer.ajaxUrl, {
+            action: 'btw_prepare_import',
+            nonce: btw_importer.nonce,
+            atom_content: atomContent
+        }, function(response) {
                 if (!response.success) {
                     $('#progress').append('<br>❌ ' + escapeHtml(response.data));
                     isImporting = false; // stop on error
-                    $('#importOverlay').hide();
+                    $('#importOverlay').hide(); // hide overlay
                     return;
                 }
 
@@ -42,7 +42,7 @@ jQuery(document).ready(function($) {
                 if (!allItems.length) {
                     $('#progress').append('<br>⚠ No posts/pages found.');
                     isImporting = false;
-                    $('#importOverlay').hide();
+                    $('#importOverlay').hide(); // hide overlay
                     return;
                 }
 
@@ -94,9 +94,9 @@ jQuery(document).ready(function($) {
         $('#progress').append('<br>📄 Importing ' + escapeHtml(post.post_type) + ': ' + escapeHtml(post.title));
         scrollToBottom();
 
-        $.post(btwImporter.ajaxUrl, {
-            action: 'btw_importer_import_single_post',
-            nonce: btwImporter.nonce,
+        $.post(btw_importer.ajaxUrl, {
+            action: 'btw_import_single_post',
+            nonce: btw_importer.nonce,
             post: post
         }, function(response) {
             if (response.success && Array.isArray(response.data)) {
@@ -110,7 +110,7 @@ jQuery(document).ready(function($) {
                         $('#progress').append('<br>' + cleanMsg);
                     }
                 });
-                $('#progress').append('<br>----------------------------------------');
+                $('#progress').append('<br>');
             } else {
                 $('#progress').append('<br>❌ Failed: ' + escapeHtml(response.data));
             }
@@ -119,7 +119,7 @@ jQuery(document).ready(function($) {
         }).fail(function(xhr, status, error) {
             $('#progress').append('<br>❌ AJAX error: ' + escapeHtml(error));
             scrollToBottom();
-            importNext(index + 1, items, doneCallback); // continue anyway
+            importNext(index + 1, items, doneCallback);
         });
     }
 
@@ -136,7 +136,7 @@ jQuery(document).ready(function($) {
     window.addEventListener('beforeunload', function(e) {
         if (isImporting) {
             e.preventDefault();
-            e.returnValue = 'Are you sure want to stop the import proccess?'; // standard way to show confirm dialog
+            e.returnValue = 'Are you sure want to stop the import proccess?';
         }
     });
 });

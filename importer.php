@@ -5,124 +5,159 @@ class btw_importer_Importer {
     private $downloaded_images = []; // cache
 
     public function __construct() {
-        add_action('admin_menu', [$this, 'btw_importer_add_menu']);
-        add_action('admin_enqueue_scripts', [$this, 'btw_importer_enqueue_scripts']);
-        add_action('wp_ajax_btw_importer_prepare_import', [$this, 'btw_importer_ajax_prepare_import']);
-        add_action('wp_ajax_btw_importer_import_single_post', [$this, 'btw_importer_ajax_import_single_post']);
+        add_action('admin_menu', [$this, 'add_menu']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_action('wp_ajax_btw_prepare_import', [$this, 'ajax_prepare_import']);
+        add_action('wp_ajax_btw_import_single_post', [$this, 'ajax_import_single_post']);
     }
 
-    public function btw_importer_add_menu() { // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-        add_menu_page( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-            'BtW Importer', 'BtW Importer', 'manage_options', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-            'btw-importer', [$this, 'btw_importer_import_page'], 'dashicons-upload' // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+    public function add_menu() {
+        add_menu_page(
+            'BtW Importer', 'BtW Importer', 'manage_options',
+            'btw-importer', [$this, 'import_page'], 'dashicons-upload'
         );
     }
 
-    public function btw_importer_enqueue_scripts($hook) {
+    public function enqueue_scripts($hook) {
         if ($hook !== 'toplevel_page_btw-importer') return;
-        wp_enqueue_script('btw_importer_script', plugin_dir_url(__FILE__).'btw-importer.js', ['jquery'], '1.2.2', true);
-        wp_localize_script('btw_importer_script', 'btwImporter', [
+        wp_enqueue_script('btw-importer', plugin_dir_url(__FILE__).'btw-importer.js', ['jquery'], '3.0.0', true);
+        wp_enqueue_style('btw-importer-style', plugin_dir_url(__FILE__).'btw-importer-style.css', [], '3.00');
+        wp_localize_script('btw-importer', 'btw_importer', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce'   => wp_create_nonce('btw_importer_importer_nonce')
+            'nonce'   => wp_create_nonce('btw_importer_nonce')
         ]);
     }
 
-    public function btw_importer_import_page() {
-        echo '<div class="wrap">
-            <h1>BtW Importer</h1>
-            <p>A powerful yet simple migration tool, BtW Importer helps you seamlessly transfer posts, images, and formatting from Blogger (Blogspot) to WordPress. Don&apos;t forget to share this plugin if you found it&apos;s usefull</p>
-            <div id="importNotice" style="margin:20px;">
-            <h2>⚠️ Please Read Before Importing ⚠️</h2>
-            <ul>
-                <li>🛑 ️This plugin doesn&apos;t overwrite existing posts with the same name. If you&apos;ve previously used an importer, it&apos;s recommended to manually delete the previously imported content.</li>
-                <li>🛑 301 redirects only work if you previously used a custom domain on Blogspot and you&apos;re moving that domain to WordPress.</li>
-                <li>🛑 Make sure not to leave this page while the process is underway, or the import will stop, and you&apos;ll need to start from the beginning.</li>
-                <li>🛑 301 redirects work if this plugin is active and you have already run the importer.</li>
-                <li>🛑 Only image from Google/Blogspot will be downloaded.</li>
-                <li>🛑 Be sure to manually check your content after the import process is complete.</li>
-            </ul>
-              <input type="checkbox" id="agreeNotice">
-              <label for="agreeNotice">
-                I&apos;ve read all of them and I want to start the importer.
-              </label>
+    public function import_page() {
+        echo '<div class="wrap btw_importer_wrap">
+            <div class="btw_importer_header">
+                <h1>BtW Importer</h1>
+                <p class="btw_importer_subtitle">A powerful yet simple migration tool, BtW Importer helps you seamlessly transfer posts, images, and formatting from Blogger (Blogspot) to WordPress. Don&apos;t forget to share this plugin if you found it&apos;s usefull</p>
             </div>
-            <input type="file" id="atomFile" accept=".xml,.atom" />
-            <button id="startImport" class="button button-primary" disabled>Start Import</button><br>
-            <label for="atomFile">Accepted File: .xml,.atom</label>
-            <hr>
-            <div id="importOverlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); color: #fff; font-size: 20px; z-index: 9999; text-align: center; padding-top: 20%;">
-                ⚠ Import in progress... Please don’t close, reload, or navigate away.
+            
+            <div id="importNotice" class="btw_importer_notice">
+                <div class="btw_importer_notice_header">
+                    <span class="dashicons dashicons-warning"></span>
+                    <h2>Please Read Before Importing</h2>
+                </div>
+                <ul class="btw_importer_notice_list">
+                    <li><span class="dashicons dashicons-no"></span> This plugin doesn&apos;t overwrite existing posts with the same name. If you&apos;ve previously used an importer, it&apos;s recommended to manually delete the previously imported content.</li>
+                    <li><span class="dashicons dashicons-no"></span> 301 redirects only work if you previously used a custom domain on Blogspot and you&apos;re moving that domain to WordPress.</li>
+                    <li><span class="dashicons dashicons-no"></span> Make sure not to leave this page while the process is underway, or the import will stop, and you&apos;ll need to start from the beginning.</li>
+                    <li><span class="dashicons dashicons-no"></span> 301 redirects work if this plugin is active and you have already run the importer.</li>
+                    <li><span class="dashicons dashicons-no"></span> Only image from Google/Blogspot will be downloaded.</li>
+                    <li><span class="dashicons dashicons-no"></span> Be sure to manually check your content after the import process is complete.</li>
+                </ul>
+                <div class="btw_importer_checkbox_wrapper">
+                    <input type="checkbox" id="agreeNotice" class="btw_importer_checkbox">
+                    <label for="agreeNotice">
+                        I&apos;ve read all of them and I want to start the importer.
+                    </label>
+                </div>
             </div>
-            <div id="progress" style="margin-top:20px; max-height:100vh; max-width;100%; overflow:auto; background:#fff; padding:10px; border:1px solid #ddd;"></div>
+            
+            <div class="btw_importer_upload_section">
+                <div class="btw_importer_upload_box">
+                    <span class="dashicons dashicons-media-document"></span>
+                    <input type="file" id="atomFile" accept=".xml,.atom" class="btw_importer_file_input" />
+                    <label for="atomFile" class="btw_importer_file_label">Choose your Blogger export file (.xml or .atom)</label>
+                    <p class="btw_importer_file_hint">Accepted File: .xml, .atom</p>
+                </div>
+                <button id="startImport" class="button button-primary btw_importer_start_btn" disabled>
+                    <span class="dashicons dashicons-controls-play"></span> Start Import
+                </button>
+            </div>
+            
+            <div id="importOverlay" class="btw_importer_overlay">
+                <div class="btw_importer_overlay_content">
+                    <div class="btw_importer_spinner"></div>
+                    <p>Import in progress...</p>
+                    <p class="btw_importer_overlay_warning">Please don&apos;t close, reload, or navigate away.</p>
+                </div>
+            </div>
+            
+            <div id="progress" class="btw_importer_progress"></div>
         </div>';
     }
 
-    public function btw_importer_ajax_prepare_import() {
-        check_ajax_referer('btw_importer_importer_nonce', 'nonce');
-        $atom_content = isset($_POST['atom_content']) ? wp_unslash($_POST['atom_content']) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+    public function ajax_prepare_import() {
+        check_ajax_referer('btw_importer_nonce', 'nonce');
+
+        $atom_content = filter_input(INPUT_POST, 'atom_content', FILTER_UNSAFE_RAW);
+        $atom_content = null === $atom_content ? '' : wp_unslash($atom_content);
+
+        // Remove BOM and control characters
+        $atom_content = preg_replace('/^\x{FEFF}/u', '', $atom_content);
+        $atom_content = preg_replace('/[^\P{C}\n\r\t]+/u', '', $atom_content);
+
         if (!$atom_content) wp_send_json_error('No data received.');
 
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string($atom_content);
-        if (!$xml) wp_send_json_error('Failed to parse XML.');
+        if (!$xml) {
+            $errors = libxml_get_errors();
+            $messages = array_map(function($e){ return trim($e->message); }, $errors);
+            libxml_clear_errors();
+            wp_send_json_error('XML parse errors: ' . implode('; ', $messages));
+        }
+
+        $namespaces = $xml->getNamespaces(true);
+        $entries = $xml->entry;
+        if (empty($entries) && isset($namespaces['atom'])) {
+            $xml->registerXPathNamespace('a', $namespaces['atom']);
+            $entries = $xml->xpath('//a:entry');
+        }
 
         $posts = [];
-        foreach ($xml->entry as $entry) {
-        $bloggerType = strtolower((string)$entry->children('blogger', true)->type);
-        $post_type = $bloggerType;
+        foreach ($entries as $entry) {
+            $bloggerType = strtolower((string)$entry->children('blogger', true)->type);
+            $post_type = $bloggerType;
+            if ($post_type == 'page' || $post_type == 'post') {
+                $title = sanitize_text_field((string)$entry->title);
+                $content = (string)$entry->content;
+                $author = isset($entry->author->name) ? sanitize_text_field((string)$entry->author->name) : '';
 
-        if ($post_type == 'page' || $post_type == 'post') {
-            $title = sanitize_text_field((string)$entry->title);
-            $content = (string)$entry->content;
-            $author = isset($entry->author->name) ? sanitize_text_field((string)$entry->author->name) : '';
+                $published_raw = (string)$entry->published;
+                $date_gmt = gmdate('Y-m-d H:i:s', strtotime($published_raw));
+                $date_local = get_date_from_gmt($date_gmt, 'Y-m-d H:i:s');
 
-            $published_raw = (string)$entry->published;
-            $date_gmt = gmdate('Y-m-d H:i:s', strtotime($published_raw));
-            $date_local = get_date_from_gmt($date_gmt, 'Y-m-d H:i:s');
-
-            // get categories
-            $categories = [];
-            foreach ($entry->category as $cat) {
-                $term = (string)$cat['term'];
-                if ($term && strpos($term, '#') !== 0) {
-                    $categories[] = sanitize_text_field($term);
+                $categories = [];
+                foreach ($entry->category as $cat) {
+                    $term = (string)$cat['term'];
+                    if ($term && strpos($term, '#') !== 0) {
+                        $categories[] = sanitize_text_field($term);
+                    }
                 }
-            } // ✅ kategori ditutup di sini
 
-            // get old permalink
-            $filename = (string)$entry->children('blogger', true)->filename;
-            $filename = trim($filename);
+                $filename = (string)$entry->children('blogger', true)->filename;
+                $filename = trim($filename);
 
-            // get blogger post status
-            $status_raw = strtolower((string)$entry->children('blogger', true)->status);
-            $status = 'publish';
-            if ($status_raw === 'draft') $status = 'draft';
-            elseif ($status_raw === 'deleted') $status = 'trash';
+                $status_raw = strtolower((string)$entry->children('blogger', true)->status);
+                $status = 'publish';
+                if ($status_raw === 'draft') $status = 'draft';
+                elseif ($status_raw === 'deleted') $status = 'trash';
 
-            $posts[] = [
-                'title'      => $title,
-                'content'    => $content,
-                'author'     => $author,
-                'post_type'  => $post_type,
-                'date'       => $date_local,
-                'date_gmt'   => $date_gmt,
-                'categories' => $categories,
-                'filename'   => $filename,
-                'status'     => $status
-            ];
-        } else {
-            // presumably a comment. Skip importing
+                $posts[] = [
+                    'title'      => $title,
+                    'content'    => $content,
+                    'author'     => $author,
+                    'post_type'  => $post_type,
+                    'date'       => $date_local,
+                    'date_gmt'   => $date_gmt,
+                    'categories' => $categories,
+                    'filename'   => $filename,
+                    'status'     => $status
+                ];
+            }
         }
-    }
-
-        
 
         wp_send_json_success(['posts' => $posts]);
     }
 
-    public function btw_importer_ajax_import_single_post() {
-        check_ajax_referer('btw_importer_importer_nonce', 'nonce');
-        $raw_post = isset($_POST['post']) ? wp_unslash($_POST['post']) : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+    public function ajax_import_single_post() {
+        check_ajax_referer('btw_importer_nonce', 'nonce');
+        $raw_post = filter_input(INPUT_POST, 'post', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY);
+        $raw_post = is_array($raw_post) ? array_map('wp_unslash', $raw_post) : [];
         if (!$raw_post) wp_send_json_error('Missing post data.');
 
         $title = sanitize_text_field($raw_post['title'] ?? '');
@@ -132,9 +167,24 @@ class btw_importer_Importer {
         $date_gmt = sanitize_text_field($raw_post['date_gmt'] ?? '');
         $categories = $raw_post['categories'] ?? [];
         $filename = sanitize_text_field($raw_post['filename'] ?? '');
+        // Allow HTML Format
         $allowed_tags = wp_kses_allowed_html('post');
-        $allowed_tags['iframe'] = ['src'=>true,'width'=>true,'height'=>true,'frameborder'=>true,'allowfullscreen'=>true,'class'=>true,'youtube-src-id'=>true];
-        $content = wp_kses($raw_post['content'] ?? '', $allowed_tags);
+        $allowed_tags['iframe'] = [
+            'src' => true,
+            'width' => true,
+            'height' => true,
+            'frameborder' => true,
+            'allowfullscreen' => true,
+            'class' => true,
+            'youtube-src-id' => true
+        ];
+        if ($post_type === 'page') {
+            // Allow HTML for pages
+            $content = wp_kses($raw_post['content'] ?? '', $allowed_tags);
+        } else {
+            // Allow HTML for posts
+            $content = wp_kses($raw_post['content'] ?? '', $allowed_tags);
+        }
         $post_status = in_array($raw_post['status'], ['publish','draft','trash']) ? $raw_post['status'] : 'publish';
         $msgs = [];
 
@@ -163,7 +213,7 @@ class btw_importer_Importer {
         // add redirect meta & log redirect creation
         if ($filename) {
             if ($filename[0] !== '/') $filename = '/' . $filename;
-            add_post_meta($post_id, '_btw_importer_old_permalink', $filename, true);
+            add_post_meta($post_id, '_old_permalink', $filename, true);
             $new_url = get_permalink($post_id);
             $msgs[] = '✅ Finished create 301 redirect: '.$filename.' → '.$new_url;
         }
@@ -188,13 +238,13 @@ class btw_importer_Importer {
         }
 
         // find unique blogger/googleusercontent images by basename (after /sXXX/)
-        preg_match_all('/https?:\/\/[^"\']+\.(jpg|jpeg|png|gif|webp|bmp|svg)/i', $content, $matches);
+        preg_match_all('/https?:\/\/[^\s"\'<>]+?\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?[^\s"\'<>]*)?/i', $content, $matches);
         $image_by_basename = [];
         foreach (array_unique($matches[0]) as $img_url) {
             if (!preg_match('/(blogspot|googleusercontent)/i', $img_url)) continue;
 
-            if (preg_match('#/s\d+/(.+)$#', $img_url, $m)) {
-                $basename = $m[1];
+            if (preg_match('#/(s\d+(?:-h)?|w\d+-h\d+)/([^/]+)$#i', $img_url, $m)) {
+                $basename = $m[2];
             } else {
                 $basename = basename(wp_parse_url($img_url, PHP_URL_PATH));
             }
@@ -203,11 +253,11 @@ class btw_importer_Importer {
                 $image_by_basename[$basename] = $img_url;
             } else {
                 // prefer bigger /sXXX/ number
-                if (preg_match('#/s(\d+)/#', $img_url, $m1) && preg_match('#/s(\d+)/#', $image_by_basename[$basename], $m2)) {
-                    if ((int)$m1[1] > (int)$m2[1]) {
-                        $image_by_basename[$basename] = $img_url;
-                    }
+            if (preg_match('#/s(\d+)/#', $img_url, $m1) && preg_match('#/s(\d+)/#', $image_by_basename[$basename], $m2)) {
+                if ((int)$m1[1] > (int)$m2[1]) {
+                    $image_by_basename[$basename] = $img_url;
                 }
+            }
             }
         }
 
@@ -250,5 +300,3 @@ class btw_importer_Importer {
 }
 
 new btw_importer_Importer();
-require_once plugin_dir_path(__FILE__) . 'redirect.php';
-require_once plugin_dir_path(__FILE__) . 'redirect-log.php';
